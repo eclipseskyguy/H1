@@ -2,8 +2,17 @@ import rasterio
 import numpy as np
 import time
 from pathlib import Path  
+from PIL import Image
 
-def calculate_ndvi(red_band_path, nir_band_path, output_path):
+def save_as_png(data, output_png_path):
+    """Convert a NumPy array (NDVI/SAVI) to a PNG image."""
+    min_val, max_val = np.nanmin(data), np.nanmax(data)
+    normalized = ((data - min_val) / (max_val - min_val) * 255).astype(np.uint8)
+
+    img = Image.fromarray(normalized)
+    img.save(output_png_path)
+
+def calculate_ndvi(red_band_path, nir_band_path, output_tif_path, output_png_path):
     with rasterio.open(red_band_path) as red_src, rasterio.open(nir_band_path) as nir_src:
         red = red_src.read(1).astype(np.float32)
         nir = nir_src.read(1).astype(np.float32)
@@ -14,12 +23,15 @@ def calculate_ndvi(red_band_path, nir_band_path, output_path):
         meta = red_src.meta
         meta.update(dtype=rasterio.float32, count=1)
 
-        with rasterio.open(output_path, 'w', **meta) as dst:
+        with rasterio.open(output_tif_path, 'w', **meta) as dst:
             dst.write(ndvi, 1)
     
-    print(f'✅ NDVI image saved at: {output_path}')
+    
+    save_as_png(ndvi, output_png_path)
 
-def calculate_savi(red_band_path, nir_band_path, output_path, L=0.5):
+    print(f'✅ NDVI image saved at: {output_tif_path} and {output_png_path}')
+
+def calculate_savi(red_band_path, nir_band_path, output_tif_path, output_png_path, L=0.5):
     with rasterio.open(red_band_path) as red_src, rasterio.open(nir_band_path) as nir_src:
         red = red_src.read(1).astype(np.float32)
         nir = nir_src.read(1).astype(np.float32)
@@ -30,10 +42,14 @@ def calculate_savi(red_band_path, nir_band_path, output_path, L=0.5):
         meta = red_src.meta
         meta.update(dtype=rasterio.float32, count=1)
 
-        with rasterio.open(output_path, 'w', **meta) as dst:
+        with rasterio.open(output_tif_path, 'w', **meta) as dst:
             dst.write(savi, 1)
     
-    print(f'✅ SAVI image saved at: {output_path}')
+    
+    save_as_png(savi, output_png_path)
+
+    print(f'✅ SAVI image saved at: {output_tif_path} and {output_png_path}')
+
 
 def wait_for_file(file_path, timeout=10):
     """Waits until a file exists before proceeding."""
@@ -72,7 +88,7 @@ def detect_deforestation(ndvi_change_path, savi_change_path, ndvi_threshold=-0.2
         ndvi_change = ndvi_src.read(1)
         savi_change = savi_src.read(1)
 
-        # Detect areas where both NDVI and SAVI indicate deforestation
+        # areas where both NDVI and SAVI indicate deforestation
         deforested_pixels = np.sum((ndvi_change < ndvi_threshold) & (savi_change < savi_threshold))
         total_pixels = ndvi_change.size
         deforestation_percentage = (deforested_pixels / total_pixels) * 100
@@ -101,12 +117,16 @@ output_savi_new = base_path / "savis/savi-new.tif"
 output_savi_change = base_path / "savis/savi_change.tif"
 
 
-calculate_ndvi(red_band_old, nir_band_old, output_ndvi_old)
-calculate_ndvi(red_band_new, nir_band_new, output_ndvi_new)
+output_ndvi_old_png = base_path / "ndvis/pngs/ndvi-older.png"
+output_ndvi_new_png = base_path / "ndvis/pngs/ndvi-new.png"
+output_savi_old_png = base_path / "savis/pngs/savi-older.png"
+output_savi_new_png = base_path / "savis/pngs/savi-new.png"
 
-calculate_savi(red_band_old, nir_band_old, output_savi_old)
-calculate_savi(red_band_new, nir_band_new, output_savi_new)
+calculate_ndvi(red_band_old, nir_band_old, output_ndvi_old, output_ndvi_old_png)
+calculate_ndvi(red_band_new, nir_band_new, output_ndvi_new, output_ndvi_new_png)
 
+calculate_savi(red_band_old, nir_band_old, output_savi_old, output_savi_old_png)
+calculate_savi(red_band_new, nir_band_new, output_savi_new, output_savi_new_png)
 
 print("⏳ Waiting for NDVI and SAVI files to be ready...")
 if all(wait_for_file(path) for path in [output_ndvi_old, output_ndvi_new, output_savi_old, output_savi_new]):
