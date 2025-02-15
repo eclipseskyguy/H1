@@ -4,6 +4,8 @@ import subprocess
 import json
 from pathlib import Path
 import os
+import shutil
+import atexit
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
@@ -17,6 +19,8 @@ STATIC_PATH.mkdir(exist_ok=True)
 
 # Store the selected folder globally
 selected_folder = None
+image_request_count = 0
+TOTAL_IMAGES = 4
 
 @app.route('/set-folder', methods=['POST'])
 def set_folder():
@@ -89,15 +93,48 @@ def run_analysis():
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
 
+import time
 
+def delete_temp_results():
+    temp_results_path = BASE_PATH / "temp_results"
+    if temp_results_path.exists():
+        try:
+            # Close all open file handles (Windows issue)
+            for file in temp_results_path.rglob("*"):
+                try:
+                    with open(file, 'rb') as f:
+                        pass  # Just attempt to open and close it
+                except Exception:
+                    pass
 
-@app.route('/temp_results/ndvis/<path:filename>')
-def serve_ndvis(filename):
-    return send_from_directory(BASE_PATH / "temp_results/ndvis", filename)
+            # Give time for release
+            time.sleep(1)
+
+            # Now try deleting
+            shutil.rmtree(temp_results_path)
+            print("Deleted temp_results folder after all images served.")
+        except Exception as e:
+            print(f"Error deleting temp_results: {e}")
+
 
 @app.route('/temp_results/savis/<path:filename>')
 def serve_savis(filename):
-    return send_from_directory(BASE_PATH / "temp_results/savis", filename)
+    global image_request_count
+    response = send_from_directory(BASE_PATH / "temp_results/savis", filename)
+    image_request_count += 1
+    if image_request_count >= TOTAL_IMAGES:
+        delete_temp_results()
+    return response
+
+@app.route('/temp_results/ndvis/<path:filename>')
+def serve_ndvis(filename):
+    global image_request_count
+    response = send_from_directory(BASE_PATH / "temp_results/ndvis", filename)
+    image_request_count += 1
+    if image_request_count >= TOTAL_IMAGES:
+        delete_temp_results()
+    return response
+
 
 @app.route('/get-folders', methods=['GET'])
 def get_folders():

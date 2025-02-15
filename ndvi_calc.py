@@ -52,9 +52,10 @@ def detect_deforestation(ndvi_change_path, savi_change_path, ndvi_threshold=-0.2
          rasterio.open(savi_change_path, mmap=True, num_threads="all_cpus") as savi_src:
         ndvi_change, savi_change = ndvi_src.read(1), savi_src.read(1)
         deforested_pixels = np.sum((ndvi_change < ndvi_threshold) & (savi_change < savi_threshold))
+        deforestation_percentage = round((deforested_pixels / ndvi_change.size) * 100, 2)
         result = {
-            "deforestation_percentage": round((deforested_pixels / ndvi_change.size) * 100, 2),
-            "status": "🚨 Significant deforestation detected!" if deforested_pixels > 5 else "✅ No significant deforestation detected."
+            "deforestation_percentage": deforestation_percentage,
+            "status": "🚨 Significant deforestation detected!" if deforestation_percentage > 5 else "✅ No significant deforestation detected."
         }
     print(json.dumps(result))
     sys.stdout.flush()
