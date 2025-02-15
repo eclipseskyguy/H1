@@ -7,6 +7,9 @@ from pathlib import Path
 import cv2
 from concurrent.futures import ThreadPoolExecutor
 
+start_folder = Path(sys.argv[1])
+end_folder = Path(sys.argv[2])
+
 def save_as_png(data, output_png_path):
     min_val, max_val = np.nanmin(data), np.nanmax(data)
     normalized = ((data - min_val) / (max_val - min_val) * 255).astype(np.uint8)
@@ -59,17 +62,21 @@ def detect_deforestation(ndvi_change_path, savi_change_path, ndvi_threshold=-0.2
 def parallel_processes():
     base_path = Path(__file__).resolve().parent
     paths = {
-        "red_band_old": base_path / "old/band4.TIF",
-        "nir_band_old": base_path / "old/band5.TIF",
-        "red_band_new": base_path / "new/band4o.TIF",
-        "nir_band_new": base_path / "new/band5o.TIF",
-        "ndvi_old": base_path / "ndvis/ndvi-old.tif",
-        "ndvi_new": base_path / "ndvis/ndvi-new.tif",
-        "ndvi_change": base_path / "ndvis/ndvi_change.tif",
-        "savi_old": base_path / "savis/savi-old.tif",
-        "savi_new": base_path / "savis/savi-new.tif",
-        "savi_change": base_path / "savis/savi_change.tif",
+        "red_band_old": base_path / "NDVI B4 B5" / start_folder / "band4.TIF",
+        "nir_band_old": base_path / "NDVI B4 B5" / start_folder / "band5.TIF",
+        "red_band_new": base_path / "NDVI B4 B5" / end_folder / "band4.TIF",
+        "nir_band_new": base_path / "NDVI B4 B5" / end_folder / "band5.TIF",
+        "ndvi_old": base_path / "temp_results/ndvis/ndvi-old.tif",
+        "ndvi_new": base_path / "temp_results/ndvis/ndvi-new.tif",
+        "ndvi_change": base_path / "temp_results/ndvis/ndvi_change.tif",
+        "savi_old": base_path / "temp_results/savis/savi-old.tif",
+        "savi_new": base_path / "temp_results/savis/savi-new.tif",
+        "savi_change": base_path / "temp_results/savis/savi_change.tif",
     }
+
+    # Ensure directories exist
+    Path(paths["ndvi_old"]).parent.mkdir(parents=True, exist_ok=True)
+    Path(paths["savi_old"]).parent.mkdir(parents=True, exist_ok=True)
 
     with ThreadPoolExecutor() as executor:
         executor.submit(compute_indices, paths["red_band_old"], paths["nir_band_old"], paths["ndvi_old"], paths["savi_old"], paths["ndvi_old"].with_suffix(".png"), paths["savi_old"].with_suffix(".png"))
