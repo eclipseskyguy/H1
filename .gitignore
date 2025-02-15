@@ -29,6 +29,7 @@ secrets.json
 *.dll
 *.so
 *.dylib
+*.tif
 
 # Ignore data files such as .mp4, .png, .json, .xls etc.
 *.mp4
