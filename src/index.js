@@ -1,6 +1,5 @@
 import 'dotenv/config';
-
-import 'dotenv/config';
+import fs from 'fs';
 
 async function authenticate() {
     const url = "https://m2m.cr.usgs.gov/api/api/json/stable/login-token";
@@ -55,5 +54,6 @@ async function searchDatasets(apiKey) {
     });
 
     const data = await response.json();
+    fs.writeFileSync("datasets.json", JSON.stringify(data.data, null, 2));
     console.log("Available Datasets:", data);
 }
