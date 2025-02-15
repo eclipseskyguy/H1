@@ -63,10 +63,10 @@ def parallel_processes():
         "nir_band_old": base_path / "old/band5.TIF",
         "red_band_new": base_path / "new/band4o.TIF",
         "nir_band_new": base_path / "new/band5o.TIF",
-        "ndvi_old": base_path / "ndvis/ndvi-older.tif",
+        "ndvi_old": base_path / "ndvis/ndvi-old.tif",
         "ndvi_new": base_path / "ndvis/ndvi-new.tif",
         "ndvi_change": base_path / "ndvis/ndvi_change.tif",
-        "savi_old": base_path / "savis/savi-older.tif",
+        "savi_old": base_path / "savis/savi-old.tif",
         "savi_new": base_path / "savis/savi-new.tif",
         "savi_change": base_path / "savis/savi_change.tif",
     }
