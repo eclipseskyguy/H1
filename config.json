@@ -1,0 +1,10 @@
+{
+    "cloud_shadow_threshold": 0.3,
+    "ndvi_threshold": -0.2,
+    "savi_threshold": -0.2,
+    "deforestation_alert_threshold": 5,
+    "brightness_threshold": 0.2,
+    "L": 0.5,
+    "input_folder": "NDVI B4 B5",
+    "output_folder": "temp_results"
+}
