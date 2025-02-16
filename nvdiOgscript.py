@@ -71,13 +71,11 @@ def compute_indices(red_band_path, nir_band_path, output_ndvi_path, output_savi_
             meta = red_src.meta
             meta.update(dtype=rasterio.float32, count=1)
 
-            # Write NDVI and SAVI to disk
             with rasterio.open(output_ndvi_path, 'w', **meta, num_threads="all_cpus") as ndvi_dst:
                 ndvi_dst.write(ndvi, 1)
             with rasterio.open(output_savi_path, 'w', **meta, num_threads="all_cpus") as savi_dst:
                 savi_dst.write(savi, 1)
             
-            # Save PNGs for visualization
             save_as_png(ndvi, ndvi_png_path)
             save_as_png(savi, savi_png_path)
 
