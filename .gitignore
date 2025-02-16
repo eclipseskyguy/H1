@@ -21,7 +21,6 @@ data/
 .env.*.local
 
 # Ignore sensitive or personal files
-config.js
 secrets.json
 
 # Ignore compiled binaries or executables
